@@ -17,9 +17,10 @@ export async function onRequestGet(context) {
   }
 
   const hasToken = Boolean(env.TOKEN);
-  const amapKey = env.AMAP_KEY || '';
+  const amapKey = env.GAODE_MAPS_API_KEY || '';
 
-  const configScript = `<script>window.__CFG__=${JSON.stringify({ hasToken, amapKey })};</script>`;
+  const googleMapsKey = env.GOOGLE_MAPS_API_KEY || '';
+  const configScript = `<script>window.__CFG__=${JSON.stringify({ hasToken, amapKey, googleMapsKey })};</script>`;
 
   // Use HTMLRewriter to inject the config script just before the closing </head> tag
   return new HTMLRewriter()
