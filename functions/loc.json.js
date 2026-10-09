@@ -15,10 +15,11 @@ export async function onRequestGet(context) {
     return errorResponse('unauthorized', 401);
   }
 
-  let loc = DEFAULT_LOC;
-  if (env.SPOOFER_DATA) {
-    loc = await env.SPOOFER_DATA.get('loc', { type: 'json' }) || DEFAULT_LOC;
+  if (!env.SPOOFER_DATA) {
+    return errorResponse('SPOOFER_DATA KV binding is missing', 503);
   }
+
+  const loc = await env.SPOOFER_DATA.get('loc', { type: 'json' }) || DEFAULT_LOC;
 
   return jsonResponse(loc);
 }

@@ -781,20 +781,24 @@
   /* ─────────────────────────────────────────────────────────────
      8. Shadowrocket 运行时接入 (Shadowrocket Runtime Integration)
   ───────────────────────────────────────────────────────────── */
-  function fetchRemoteConfig(url, callback) {
+  function fetchRemoteConfig(url, debug, callback) {
     if (!url || typeof $httpClient === "undefined") {
+      if (debug) console.log("[Location Spoofer] Remote config unavailable: missing URL or HTTP client");
       callback(null);
       return;
     }
     $httpClient.get({ url: url, timeout: 5 }, function (err, resp, data) {
       if (err || !data || (resp && resp.status >= 400)) {
+        if (debug) console.log("[Location Spoofer] Remote config failed: " + (err ? "network error" : (resp ? "HTTP " + resp.status : "empty response")));
         callback(null);
         return;
       }
       try {
         var json = JSON.parse(data);
+        if (debug) console.log("[Location Spoofer] Remote config loaded");
         callback(json);
       } catch (e) {
+        if (debug) console.log("[Location Spoofer] Remote config failed: invalid JSON");
         callback(null);
       }
     });
@@ -810,6 +814,7 @@
 
     var scriptArgs = typeof $argument === "string" ? parseArgumentString($argument) : {};
     var config = normalizeConfig(scriptArgs);
+    if (config.debug) console.log("[Location Spoofer] Response script started");
 
     function passThrough() {
       $done({});
@@ -825,11 +830,8 @@
       headers["X-Location-Spoofer-Cell"] = String(cellCount);
 
       $done({
-        response: {
-          status: 200,
-          headers: headers,
-          body: bodyBytes
-        }
+        headers: headers,
+        body: bodyBytes
       });
     }
 
@@ -837,6 +839,7 @@
       try {
         var rawBody = ByteUtils.toUint8Array(($response && $response.body != null) ? $response.body : ($response && $response.bodyBytes));
         if (!rawBody || rawBody.length < 2) {
+          if (activeConfig.debug) console.log("[Location Spoofer] Response body unavailable or too short");
           passThrough();
           return;
         }
@@ -865,7 +868,7 @@
     }
 
     if (config.configUrl) {
-      fetchRemoteConfig(config.configUrl, function (remoteData) {
+      fetchRemoteConfig(config.configUrl, config.debug, function (remoteData) {
         if (remoteData) {
           if (remoteData.latitude != null) config.latitude = Number(remoteData.latitude);
           if (remoteData.longitude != null) config.longitude = Number(remoteData.longitude);

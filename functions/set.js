@@ -15,13 +15,15 @@ export async function onRequestPost(context) {
     return errorResponse('unauthorized', 401);
   }
 
+  if (!env.SPOOFER_DATA) {
+    return errorResponse('SPOOFER_DATA KV binding is missing', 503);
+  }
+
   try {
     const data = await request.json();
     let current = DEFAULT_LOC;
 
-    if (env.SPOOFER_DATA) {
-      current = await env.SPOOFER_DATA.get('loc', { type: 'json' }) || DEFAULT_LOC;
-    }
+    current = await env.SPOOFER_DATA.get('loc', { type: 'json' }) || DEFAULT_LOC;
 
     const updated = { ...current };
     if (typeof data.latitude           === 'number') updated.latitude           = data.latitude;
@@ -30,9 +32,7 @@ export async function onRequestPost(context) {
     if (typeof data.horizontalAccuracy === 'number') updated.horizontalAccuracy = data.horizontalAccuracy;
     if (typeof data.verticalAccuracy   === 'number') updated.verticalAccuracy   = data.verticalAccuracy;
 
-    if (env.SPOOFER_DATA) {
-      await env.SPOOFER_DATA.put('loc', JSON.stringify(updated));
-    }
+    await env.SPOOFER_DATA.put('loc', JSON.stringify(updated));
 
     return jsonResponse(updated);
   } catch (err) {

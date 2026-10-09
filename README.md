@@ -156,6 +156,17 @@
 
 回到小火箭首页，开启 VPN 开关，模式保持 **「配置 (Config)」** 即可。
 
+### 4. 定位未变化时排查
+
+“位置已锁定”表示面板保存请求成功，仍需确认 Shadowrocket 实际执行了定位响应脚本。建议依次检查：
+
+1. 使用模块中的 `configUrl` 在自己的浏览器读取 `/loc.json`，确认返回的经纬度与面板锁定值一致。链接含有 Token，请勿公开分享。若返回 401，请更新模块中的 Token；若返回 503，请检查 Pages 的 `SPOOFER_DATA` KV 绑定并重新部署。
+2. 在模块脚本参数中暂时将 `debug=false` 改为 `debug=true`，启用 Shadowrocket 日志记录，然后关闭并重新开启系统定位服务，再打开地图请求当前位置。
+3. 在日志中搜索 `[Location Spoofer]`：`Response script started` 表示脚本已触发；`Remote config loaded` 表示已读到云端配置；`Patched ... Wi-Fi, ... Cell` 表示处理了定位响应。`Remote config failed` 或 `Failed` 需要按对应错误排查。上述日志不会输出 Token。
+4. 项目通过改写网络定位响应影响 Wi-Fi/基站定位，不能保证覆盖 GPS、系统缓存或所有 App 的定位结果。应以实际拦截记录、脚本日志及设备结果确认兼容性。
+
+修改部署脚本后，需重新部署 Pages，并更新 Shadowrocket 模块/脚本缓存、重新连接 VPN。诊断完成后可将 `debug` 恢复为 `false`。
+
 ---
 
 ## 🧭 日常使用流程
